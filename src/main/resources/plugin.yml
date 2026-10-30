@@ -1,0 +1,4 @@
+name: DragonBuff
+version: 2.0
+main: com.dragonbuff.DragonBuffPlugin
+api-version: '1.21'
