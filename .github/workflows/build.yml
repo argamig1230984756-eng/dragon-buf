@@ -2,7 +2,6 @@ name: Build
 
 on:
   push:
-    branches: [ main, master ]
   pull_request:
   workflow_dispatch:
 
@@ -10,21 +9,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
-          cache: maven
 
-      - name: Build with Maven
-        run: mvn -B clean package
+      - name: Build (auto-detect Maven or Gradle)
+        run: |
+          if [ -f pom.xml ]; then
+            mvn -B clean package
+          elif [ -f build.gradle ] || [ -f build.gradle.kts ]; then
+            chmod +x gradlew 2>/dev/null || true
+            if [ -f gradlew ]; then ./gradlew build; else gradle build; fi
+          else
+            echo "No pom.xml or build.gradle in the repo root. Add your plugin project first."
+            ls -la
+            exit 1
+          fi
 
-      - name: Upload plugin jar
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: DragonBuff
-          path: target/*.jar
+          path: |
+            target/*.jar
+            build/libs/*.jar
